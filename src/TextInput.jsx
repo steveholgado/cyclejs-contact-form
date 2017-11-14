@@ -4,21 +4,27 @@ function intent (domSource) {
   return domSource
     .select('.text-input')
     .events('input')
-    .map(e => e.target.value)
+    .map(e => ({
+      name: e.target.name,
+      value: e.target.value
+    }))
 }
 
-function model (props$, action$) {
+function model (action$) {
   return action$
-    .startWith('')
+    .startWith({
+      name: '',
+      value: ''
+    })
 }
 
 function view (props$, state$) {
   return xs
     .combine(props$, state$)
-    .map(([ props, value ]) => 
+    .map(([ props, state ]) => 
       <div>
         <label>{ props.label }</label>
-        <input type={ props.type } value={ value } className="text-input" />
+        <input className='text-input' type={ props.type } name={ props.name } value={ state.value }  />
       </div>
     )
 }
@@ -26,7 +32,7 @@ function view (props$, state$) {
 function TextInput (sources) {
 
   const action$ = intent(sources.DOM)
-  const state$  = model(sources.props, action$)
+  const state$  = model(action$)
   const vtree$  = view(sources.props, state$)
 
   const sinks = {

@@ -8,19 +8,19 @@ function intent (domSource) {
     .events('click', { preventDefault: true })
 }
 
-function model (action$, nameInput, emailInput, messageInput) {
+function model (action$, formFields) {
 
-  const formDOM$ = xs
-    .combine(nameInput.DOM, emailInput.DOM, messageInput.DOM)
+  const formFieldDOMs   = formFields.map(field => field.DOM)
+  const formFieldValues = formFields.map(field => field.value)
+
+  const formDOM$ = xs.combine(...formFieldDOMs)
 
   const formData$ = action$
-    .map(() => xs
-      .combine(nameInput.value, emailInput.value, messageInput.value)
-      .take(1)
-    )
+    .map(() => xs.combine(...formFieldValues).take(1))
     .flatten()
-    .filter(([ name, email, message ]) => name && email && message)
-    .map(([ name, email, message ]) => ({ name, email, message }))
+    .filter(fields => fields.every(field => field.value))
+    .map(fields => fields.map(field => ({ [field.name]: field.value }) ))
+    .map(fields => Object.assign({}, ...fields))
 
   return { formDOM$, formData$ }
 
@@ -28,12 +28,10 @@ function model (action$, nameInput, emailInput, messageInput) {
 
 function view (formDOM$) {
   return formDOM$
-    .map(([ nameDOM, emailDOM, messageDOM ]) => 
+    .map(formFieldDOMs => 
       <form>
         <h1>Contact Me</h1>
-        { nameDOM }
-        { emailDOM }
-        { messageDOM }
+        { formFieldDOMs }
         <button className="submit">Submit</button>
       </form>
     )
@@ -41,16 +39,18 @@ function view (formDOM$) {
 
 function ContactForm (sources) {
 
-  const nameProps$    = xs.of({ label: 'Name', type: 'text' })
-  const emailProps$   = xs.of({ label: 'Email', type: 'text' })
-  const messageProps$ = xs.of({ label: 'Message', type: 'text' })
+  const nameProps$    = xs.of({ label: 'Name', name: 'name', type: 'text' })
+  const emailProps$   = xs.of({ label: 'Email', name: 'email', type: 'text' })
+  const messageProps$ = xs.of({ label: 'Message', name: 'message', type: 'text' })
 
   const nameInput    = isolate(TextInput)({ DOM: sources.DOM, props: nameProps$ })
   const emailInput   = isolate(TextInput)({ DOM: sources.DOM, props: emailProps$ })
   const messageInput = isolate(TextInput)({ DOM: sources.DOM, props: messageProps$ })
 
+  const formInputs = [nameInput, emailInput, messageInput]
+
   const action$ = intent(sources.DOM)
-  const states  = model(action$, nameInput, emailInput, messageInput)
+  const states  = model(action$, formInputs)
   const vtree$  = view(states.formDOM$)
 
   const sinks = {
