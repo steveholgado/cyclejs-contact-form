@@ -3,7 +3,7 @@ import ContactForm from './ContactForm'
 
 function App (sources) {
 
-	// Create contact form using ContactForm component
+  // Create contact form using ContactForm component
   const contactForm = ContactForm(sources)
 
   // Do something with data stream returned from contact form
