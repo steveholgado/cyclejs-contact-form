@@ -4,14 +4,16 @@ function intent (domSource) {
   return domSource
     .select('.text-input')
     .events('input')
-    .map(e => ({
-      name: e.target.name,
-      value: e.target.value
-    }))
 }
 
 function model (action$) {
   return action$
+    // Map input changes to object with field name and value
+    .map(e => ({
+      name: e.target.name,
+      value: e.target.value
+    }))
+    // Start with empty values in order to get initial view render
     .startWith({
       name: '',
       value: ''
