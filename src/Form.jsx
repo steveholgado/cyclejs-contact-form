@@ -1,4 +1,5 @@
 import xs from 'xstream'
+import isolate from '@cycle/isolate'
 import TextInput from './TextInput'
 
 function intent (domSource) {
@@ -69,6 +70,10 @@ function Form (sources) {
 
   return sinks
 
+}
+
+function IsolatedForm (sources) {
+  return isolate(Form)(sources)
 }
 
 export default Form
