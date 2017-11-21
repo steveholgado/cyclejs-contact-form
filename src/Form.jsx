@@ -43,7 +43,7 @@ function view (formVtree$) {
     )
 }
 
-function ContactForm (sources) {
+function Form (sources) {
 
   // Create props streams for form input fields
   const nameProps$    = xs.of({ label: 'Name', name: 'name', type: 'text' })
@@ -71,4 +71,4 @@ function ContactForm (sources) {
 
 }
 
-export default ContactForm
+export default Form
