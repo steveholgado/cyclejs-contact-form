@@ -48,7 +48,7 @@ function Form (sources) {
   // Create props streams for form input fields
   const nameProps$    = xs.of({ label: 'Name', name: 'name', type: 'text' })
   const emailProps$   = xs.of({ label: 'Email', name: 'email', type: 'text' })
-  const messageProps$ = xs.of({ label: 'Message', name: 'message', type: 'text' })
+  const messageProps$ = xs.of({ label: 'Message', name: 'message', multi: true })
 
   // Create form input fields using TextInput component
   const nameInput    = TextInput({ DOM: sources.DOM, props: nameProps$ })

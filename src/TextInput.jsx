@@ -26,8 +26,11 @@ function view (props$, state$) {
     .combine(props$, state$)
     .map(([ props, state ]) => 
       <div>
-        <label>{ props.label }</label>
-        <input className='text-input' type={ props.type } name={ props.name } value={ state.value }  />
+        {
+          props.multi
+            ? <textarea className='text-input' name={ props.name } value={ state.value } placeholder={ props.label } />
+            : <input className='text-input' type={ props.type } name={ props.name } value={ state.value } placeholder={ props.label } />
+        }
       </div>
     )
 }
