@@ -5,20 +5,22 @@ function intent (domSource) {
   return domSource
     .select('.text-input')
     .events('input')
-}
-
-function model (action$) {
-  return action$
-    // Map input changes to object with field name and value
     .map(e => ({
       name: e.target.name,
       value: e.target.value
     }))
-    // Start with empty values in order to get initial view render
-    .startWith({
-      name: '',
-      value: ''
-    })
+}
+
+function model (props$, action$) {
+  return props$
+    .map(props => action$
+      .startWith({
+        name: props.name,
+        value: ''
+      })
+    )
+    .flatten()
+    .remember()    
 }
 
 function view (props$, state$) {
@@ -38,7 +40,7 @@ function view (props$, state$) {
 function TextInput (sources) {
 
   const action$ = intent(sources.DOM)
-  const state$  = model(action$)
+  const state$  = model(sources.props, action$)
   const vtree$  = view(sources.props, state$)
 
   const sinks = {

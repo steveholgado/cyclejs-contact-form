@@ -19,15 +19,10 @@ function model (action$, formFields) {
 
   // Map clicks on submit button to an object of field names and values
   const formData$ = action$
-    // Map clicks to combined form input value streams
-    // Take just 1 per click or stream will emit on every change
     .map(() => xs.combine(...formFieldValues).take(1))
     .flatten()
-    // Filter out submits where any field is empty
     .filter(fields => fields.every(field => field.value))
-    // Map field object to new object with name as key
     .map(fields => fields.map(field => ({ [field.name]: field.value }) ))
-    // Combine each form field name/value objects into a single object
     .map(fields => Object.assign({}, ...fields))
 
   return { formVtree$, formData$ }
