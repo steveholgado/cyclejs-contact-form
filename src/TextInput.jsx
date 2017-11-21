@@ -1,4 +1,5 @@
 import xs from 'xstream'
+import isolate from '@cycle/isolate'
 
 function intent (domSource) {
   return domSource
@@ -46,4 +47,8 @@ function TextInput (sources) {
 
 }
 
-export default TextInput
+function IsolatedTextInput (sources) {
+  return isolate(TextInput)(sources)
+}
+
+export default IsolatedTextInput
