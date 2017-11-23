@@ -8,29 +8,36 @@ function intent (domSource) {
     .events('click', { preventDefault: true })
 }
 
-function model (action$, formFields) {
+function model (action$, formFields$) {
 
   // Separate returned sinks from form inputs into separate arrays
-  const formFieldVtrees = formFields.map(field => field.DOM)
-  const formFieldValues = formFields.map(field => field.value)
+  const formFieldVtrees$ = formFields$.map(fields => fields.map(field => field.DOM))
+  const formFieldValues$ = formFields$.map(fields => fields.map(field => field.value))
 
-  // Combine DOM trees from form inputs into new stream
-  const formVtree$ = xs.combine(...formFieldVtrees)
+  // Combine vtrees from form inputs into new stream
+  const formFieldVtreesCombined$ = formFieldVtrees$
+    .map(vtrees => xs.combine(...vtrees))
+    .flatten()
+
+  // Combine values from form inputs into new stream
+  const formFieldValuesCombined$ = formFieldValues$
+    .map(values => xs.combine(...values))
+    .flatten()
 
   // Map clicks on submit button to an object of field names and values
-  const formData$ = action$
-    .map(() => xs.combine(...formFieldValues).take(1))
+  const formFieldData$ = action$
+    .map(() => formFieldValuesCombined$.take(1))
     .flatten()
     .filter(fields => fields.every(field => field.value))
     .map(fields => fields.map(field => ({ [field.name]: field.value }) ))
     .map(fields => Object.assign({}, ...fields))
 
-  return { formVtree$, formData$ }
+  return { formFieldVtreesCombined$, formFieldData$ }
 
 }
 
-function view (formVtree$) {
-  return formVtree$
+function view (formFieldVtreesCombined$) {
+  return formFieldVtreesCombined$
     .map(formFieldVtrees => 
       <form>
         { formFieldVtrees }
@@ -52,15 +59,15 @@ function Form (sources) {
   const messageInput = TextInput({ DOM: sources.DOM, props: messageProps$ })
 
   // Create array of form input components
-  const formInputs = [nameInput, emailInput, messageInput]
+  const formInputs$ = xs.of([nameInput, emailInput, messageInput])
 
   const action$ = intent(sources.DOM)
-  const states  = model(action$, formInputs)
-  const vtree$  = view(states.formVtree$)
+  const states  = model(action$, formInputs$)
+  const vtree$  = view(states.formFieldVtreesCombined$)
 
   const sinks = {
     DOM: vtree$,
-    data: states.formData$
+    data: states.formFieldData$
   }
 
   return sinks
