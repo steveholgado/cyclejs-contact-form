@@ -1,8 +1,9 @@
 {
   "name": "cyclejs-contact-form",
   "version": "0.1.0",
+  "description": "Contact form built with Cycle.js",
   "author": "Steve Holgado",
-  "private": true,
+  "license": "ISC",
   "devDependencies": {
     "cycle-scripts": "2.1.0"
   },
