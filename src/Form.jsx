@@ -28,7 +28,7 @@ function model (action$, formFields$) {
   const formFieldData$ = action$
     .map(() => formFieldValuesCombined$.take(1))
     .flatten()
-    .filter(fields => fields.every(field => field.value))
+    .filter(fields => fields.every(field => field.valid))
     .map(fields => fields.map(field => ({ [field.name]: field.value }) ))
     .map(fields => Object.assign({}, ...fields))
 
@@ -49,9 +49,31 @@ function view (formFieldVtreesCombined$) {
 function Form (sources) {
 
   // Create props streams for form input fields
-  const nameProps$    = xs.of({ label: 'Name', name: 'name', type: 'text' })
-  const emailProps$   = xs.of({ label: 'Email', name: 'email', type: 'text' })
-  const messageProps$ = xs.of({ label: 'Message', name: 'message', multi: true })
+  const nameProps$ = xs.of({
+    label: 'Name',
+    name: 'name',
+    type: 'text',
+    validation: {
+      required: true,
+      min: 5,
+      max: 10
+    }
+  })
+  const emailProps$ = xs.of({
+    label: 'Email',
+    name: 'email',
+    type: 'text',
+    validation: {
+      required: true,
+      min: 5,
+      max: 10
+    }
+  })
+  const messageProps$ = xs.of({
+    label: 'Message',
+    name: 'message',
+    multi: true
+  })
 
   // Create form input fields using TextInput component
   const nameInput    = TextInput({ DOM: sources.DOM, props: nameProps$ })
@@ -78,4 +100,4 @@ function IsolatedForm (sources) {
   return isolate(Form)(sources)
 }
 
-export default Form
+export default IsolatedForm

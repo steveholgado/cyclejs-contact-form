@@ -11,6 +11,18 @@ function intent (domSource) {
     }))
 }
 
+function validate ({ validation }, state) {
+  let valid = true
+
+  if (validation) {
+    if (validation.required && !state.value) valid = false
+    if (validation.min && state.value.length < validation.min) valid = false
+    if (validation.max && state.value.length > validation.max) valid = false
+  }
+
+  return { ...state, valid }
+}
+
 function model (props$, action$) {
   return props$
     .map(props => action$
@@ -18,8 +30,10 @@ function model (props$, action$) {
         name: props.name,
         value: ''
       })
+      .map(state => validate(props, state))
     )
     .flatten()
+    .debug(x => console.log(x))
     .remember()    
 }
 
@@ -30,8 +44,8 @@ function view (props$, state$) {
       <div>
         {
           props.multi
-            ? <textarea className='text-input' name={ props.name } value={ state.value } placeholder={ props.label } />
-            : <input className='text-input' type={ props.type } name={ props.name } value={ state.value } placeholder={ props.label } />
+            ? <textarea className='text-input' name={ props.name } placeholder={ props.label } />
+            : <input className='text-input' type={ props.type } name={ props.name } placeholder={ props.label } />
         }
       </div>
     )
