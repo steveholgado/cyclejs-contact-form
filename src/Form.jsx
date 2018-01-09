@@ -1,14 +1,9 @@
 import xs from 'xstream'
 import isolate from '@cycle/isolate'
 import TextInput from './TextInput'
+import SubmitButton from './SubmitButton'
 
-function intent (domSource) {
-  return domSource
-    .select('.submit')
-    .events('click', { preventDefault: true })
-}
-
-function model (action$, formFields$) {
+function model (formFields$, submit$) {
 
   // Separate returned sinks from form inputs into separate arrays
   const formFieldVtrees$ = formFields$.map(fields => fields.map(field => field.DOM))
@@ -25,7 +20,7 @@ function model (action$, formFields$) {
     .flatten()
 
   // Map clicks on submit button to an object of field names and values
-  const formFieldData$ = action$
+  const formFieldData$ = submit$
     .map(() => formFieldValuesCombined$.take(1))
     .flatten()
     .filter(fields => fields.every(field => field.valid))
@@ -36,19 +31,23 @@ function model (action$, formFields$) {
 
 }
 
-function view (formFieldVtreesCombined$) {
-  return formFieldVtreesCombined$
-    .map(formFieldVtrees => 
+function view (formFieldVtreesCombined$, submitVtree$) {
+  return xs.combine(formFieldVtreesCombined$, submitVtree$)
+    .map(([ formFieldVtrees, submitVtree ]) => 
       <form>
         { formFieldVtrees }
-        <button className='submit'>Submit</button>
+        { submitVtree }
       </form>
     )
 }
 
 function Form (sources) {
 
-  // Create props streams for form input fields
+  // Create submit component
+  const submitProps$ = xs.of({ text: 'Submit' })
+  const submitButton = SubmitButton({ DOM: sources.DOM, props: submitProps$ })
+
+  // Create props streams for text input fields
   const nameProps$ = xs.of({
     label: 'Name',
     name: 'name',
@@ -75,17 +74,16 @@ function Form (sources) {
     multi: true
   })
 
-  // Create form input fields using TextInput component
-  const nameInput    = TextInput({ DOM: sources.DOM, props: nameProps$ })
-  const emailInput   = TextInput({ DOM: sources.DOM, props: emailProps$ })
-  const messageInput = TextInput({ DOM: sources.DOM, props: messageProps$ })
+  // Create text input components
+  const nameInput    = TextInput({ DOM: sources.DOM, props: nameProps$, submit: submitButton.value })
+  const emailInput   = TextInput({ DOM: sources.DOM, props: emailProps$, submit: submitButton.value })
+  const messageInput = TextInput({ DOM: sources.DOM, props: messageProps$, submit: submitButton.value })
 
-  // Create array of form input components
+  // Create array of text input components
   const formInputs$ = xs.of([nameInput, emailInput, messageInput])
 
-  const action$ = intent(sources.DOM)
-  const states  = model(action$, formInputs$)
-  const vtree$  = view(states.formFieldVtreesCombined$)
+  const states = model(formInputs$, submitButton.value)
+  const vtree$ = view(states.formFieldVtreesCombined$, submitButton.DOM)
 
   const sinks = {
     DOM: vtree$,

@@ -33,19 +33,29 @@ function model (props$, action$) {
       .map(state => validate(props, state))
     )
     .flatten()
-    .debug(x => console.log(x))
-    .remember()    
+    .remember()
 }
 
-function view (props$, state$) {
+function view (props$, state$, submit$) {
   return xs
-    .combine(props$, state$)
-    .map(([ props, state ]) => 
+    .combine(props$, state$, submit$)
+    .map(([ props, state, submit ]) => 
       <div>
         {
           props.multi
-            ? <textarea className='text-input' name={ props.name } placeholder={ props.label } />
-            : <input className='text-input' type={ props.type } name={ props.name } placeholder={ props.label } />
+            ? <textarea
+                className='text-input'
+                name={ props.name }
+                placeholder={ props.label }
+                style={ !state.valid && submit ? { border: '1px solid red' } : {} }
+              />
+            : <input
+                className='text-input'
+                type={ props.type }
+                name={ props.name }
+                placeholder={ props.label }
+                style={ !state.valid && submit ? { border: '1px solid red' } : {} }
+              />
         }
       </div>
     )
@@ -55,7 +65,7 @@ function TextInput (sources) {
 
   const action$ = intent(sources.DOM)
   const state$  = model(sources.props, action$)
-  const vtree$  = view(sources.props, state$)
+  const vtree$  = view(sources.props, state$, sources.submit)
 
   const sinks = {
     DOM: vtree$,
