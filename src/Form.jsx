@@ -3,40 +3,25 @@ import isolate from '@cycle/isolate'
 import TextInput from './TextInput'
 import SubmitButton from './SubmitButton'
 
-function model (formFields$, submit$) {
-
-  // Separate returned sinks from form inputs into separate arrays
-  const formFieldVtrees$ = formFields$.map(fields => fields.map(field => field.DOM))
-  const formFieldValues$ = formFields$.map(fields => fields.map(field => field.value))
-
-  // Combine vtrees from form inputs into new stream
-  const formFieldVtreesCombined$ = formFieldVtrees$
-    .map(vtrees => xs.combine(...vtrees))
-    .flatten()
-
-  // Combine values from form inputs into new stream
-  const formFieldValuesCombined$ = formFieldValues$
-    .map(values => xs.combine(...values))
-    .flatten()
+function model (formFieldValues$, submit$) {
 
   // Map clicks on submit button to an object of field names and values
   const formFieldData$ = submit$
-    .map(() => formFieldValuesCombined$.take(1))
+    .map(() => formFieldValues$.take(1))
     .flatten()
     .filter(fields => fields.every(field => field.valid))
     .map(fields => fields.map(field => ({ [field.name]: field.value }) ))
     .map(fields => Object.assign({}, ...fields))
 
-  return { formFieldVtreesCombined$, formFieldData$ }
+  return { formFieldData$ }
 
 }
 
-function view (formFieldVtreesCombined$, submitVtree$) {
-  return xs.combine(formFieldVtreesCombined$, submitVtree$)
-    .map(([ formFieldVtrees, submitVtree ]) => 
+function view (formFieldVtrees$) {
+  return formFieldVtrees$
+    .map(formFieldVtrees => 
       <form>
         { formFieldVtrees }
-        { submitVtree }
       </form>
     )
 }
@@ -54,8 +39,8 @@ function Form (sources) {
     type: 'text',
     validation: {
       required: true,
-      min: 5,
-      max: 10
+      min: 3,
+      max: 20
     }
   })
   const emailProps$ = xs.of({
@@ -65,7 +50,7 @@ function Form (sources) {
     validation: {
       required: true,
       min: 5,
-      max: 10
+      max: 50
     }
   })
   const messageProps$ = xs.of({
@@ -80,10 +65,11 @@ function Form (sources) {
   const messageInput = TextInput({ DOM: sources.DOM, props: messageProps$, submit: submitButton.value })
 
   // Create array of text input components
-  const formInputs$ = xs.of([nameInput, emailInput, messageInput])
+  const formFieldVtrees$ = xs.combine(nameInput.DOM, emailInput.DOM, messageInput.DOM, submitButton.DOM)
+  const formFieldValues$ = xs.combine(nameInput.value, emailInput.value, messageInput.value)
 
-  const states = model(formInputs$, submitButton.value)
-  const vtree$ = view(states.formFieldVtreesCombined$, submitButton.DOM)
+  const states = model(formFieldValues$, submitButton.value)
+  const vtree$ = view(formFieldVtrees$)
 
   const sinks = {
     DOM: vtree$,
