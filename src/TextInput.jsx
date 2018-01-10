@@ -39,26 +39,31 @@ function model (props$, action$) {
 function view (props$, state$, submit$) {
   return xs
     .combine(props$, state$, submit$)
-    .map(([ props, state, submit ]) => 
-      <div>
-        {
-          props.multi
-            ? <textarea
-                className='text-input'
-                name={ props.name }
-                placeholder={ props.label }
-                style={ !state.valid && submit ? { border: '1px solid red' } : {} }
-              />
-            : <input
-                className='text-input'
-                type={ props.type }
-                name={ props.name }
-                placeholder={ props.label }
-                style={ !state.valid && submit ? { border: '1px solid red' } : {} }
-              />
-        }
-      </div>
-    )
+    .map(([ props, state, submit ]) => {
+
+      const attrs = {
+        className: 'text-input',
+        name: props.name,
+        placeholder: props.label,
+        style: {}
+      }
+      if (props.validation && props.validation.required) {
+        attrs.placeholder += '*'
+      }
+      if (!state.valid && submit) {
+        attrs.style = { border: '1px solid red' }
+      }
+
+      return (
+        <div>
+          {
+            props.multi
+              ? <textarea { ...attrs } />
+              : <input { ...attrs } type={ props.type } />
+          }
+        </div>
+      )
+    })
 }
 
 function TextInput (sources) {
