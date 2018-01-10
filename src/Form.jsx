@@ -6,14 +6,12 @@ import SubmitButton from './SubmitButton'
 function model (formFieldValues$, submit$) {
 
   // Map clicks on submit button to an object of field names and values
-  const formFieldData$ = submit$
+  return submit$
     .map(() => formFieldValues$.take(1))
     .flatten()
     .filter(fields => fields.every(field => field.valid))
     .map(fields => fields.map(field => ({ [field.name]: field.value }) ))
     .map(fields => Object.assign({}, ...fields))
-
-  return { formFieldData$ }
 
 }
 
@@ -68,12 +66,12 @@ function Form (sources) {
   const formFieldVtrees$ = xs.combine(nameInput.DOM, emailInput.DOM, messageInput.DOM, submitButton.DOM)
   const formFieldValues$ = xs.combine(nameInput.value, emailInput.value, messageInput.value)
 
-  const states = model(formFieldValues$, submitButton.value)
+  const state$ = model(formFieldValues$, submitButton.value)
   const vtree$ = view(formFieldVtrees$)
 
   const sinks = {
     DOM: vtree$,
-    data: states.formFieldData$
+    data: state$
   }
 
   return sinks
